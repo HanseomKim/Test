@@ -5,6 +5,7 @@ import me.whiteship.inflearnthejavatest.domain.Study;
 import me.whiteship.inflearnthejavatest.member.MemberService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -14,8 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MockitoTests {
@@ -84,4 +84,31 @@ public class MockitoTests {
         assertEquals(Optional.empty(), memberService.findById(100L));
     }
 
+    @Test
+    void verifyTest() {
+        StudyService studyService = new StudyService(memberService, studyRepository);
+        // member 정의
+        Member member = new Member();
+        member.setId(1L);
+        member.setEmail("hello@mockito.com");
+        // study 정의
+        Study study = new Study(1, "Java");
+
+        when(memberService.findById(1L)).thenReturn(Optional.of(member));
+        when(studyRepository.save(study)).thenReturn(study);
+
+        studyService.createNewStudy(1L, study);
+
+        // study 매개변수로 1번 호출되었는지 확인합니다.
+        verify(memberService, times(1)).notify(study);
+        // notify 메소드 호출 이후 아무 일도 하지 않았는지 확인합니다.
+        verifyNoMoreInteractions(memberService);
+
+        // study 호출 이후 member로 호출 되었는지 순서를 확인합니다.
+/*
+        InOrder inOrder = inOrder(memberService);
+        inOrder.verify(memberService).notify(study);
+        inOrder.verify(memberService).notify(member);
+*/
+    }
 }
